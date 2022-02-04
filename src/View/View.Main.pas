@@ -7,12 +7,7 @@ uses
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Memo.Types,
   FMX.StdCtrls, FMX.Edit, FMX.ScrollBox, FMX.Memo, FMX.Objects, FMX.Layouts,
   FMX.Controls.Presentation,
-  System.Generics.Collections, FireDAC.Stan.Intf, FireDAC.Stan.Option,
-  FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
-  FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys, FireDAC.Phys.SQLite,
-  FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs,
-  FireDAC.Phys.SQLiteWrapper.Stat, FireDAC.FMXUI.Wait, Data.DB,
-  FireDAC.Comp.Client
+  System.Generics.Collections
   ;
 
 type
@@ -43,7 +38,6 @@ type
     imgDelivery: TImage;
     mmDelivery: TMemo;
     Layout4: TLayout;
-    bt_DeliveryClear: TSpeedButton;
     bt_StartDelivery: TSpeedButton;
     pnlTop: TPanel;
     pnlLeft: TPanel;
@@ -54,7 +48,6 @@ type
     bt_AddDrone: TSpeedButton;
     Layout1: TLayout;
     Text1: TText;
-    bt_ClearDrone: TSpeedButton;
     mmDrone: TMemo;
     pnlRight: TPanel;
     edtLocations: TEdit;
@@ -64,7 +57,6 @@ type
     bt_AddLocation: TSpeedButton;
     Layout2: TLayout;
     Text2: TText;
-    bt_LocationClear: TSpeedButton;
     mmLocation: TMemo;
     StyleBook1: TStyleBook;
     procedure bt_AddDroneClick(Sender: TObject);
@@ -207,10 +199,30 @@ begin
       end
     )
   );
+  lLastDrone := '';
+  lLastTrip := -1;
   for I := 0 to lDeliveries.Count - 1 do
-    mmDelivery.Lines.Add(lDeliveries[I].Drone.NameDrone + Chr(13) +
-      'Trip #' + IntToStr(lDeliveries[I].Trip) + Chr(13) +
-      lDeliveries[I].Location.NameLocation);
+  begin
+    lNameDrone := lDeliveries[I].Drone.NameDrone;
+    lTrip := lDeliveries[I].Trip;
+    if lNameDrone <> lLastDrone then
+    begin
+      if mmDelivery.Lines.Count > 0 then
+        mmDelivery.Lines.Add(Chr(13));
+      lLine := lDeliveries[I].Drone.NameDrone;
+      mmDelivery.Lines.Add(lLine);
+      lLastDrone := lDeliveries[I].Drone.NameDrone;
+      lLastTrip := -1;
+    end;
+    if lTrip <> lLastTrip then
+    begin
+      lLine := 'Trip #' + IntToStr(lDeliveries[I].Trip);
+      mmDelivery.Lines.Add(lLine);
+      lLastTrip := lDeliveries[I].Trip;
+    end;
+    lLine := lDeliveries[I].Location.NameLocation;
+    mmDelivery.Lines.Add(lLine);
+  end;
 end;
 
 function TViewMain.BuildRandomValues(const AValue1, AValue2: string): string;
