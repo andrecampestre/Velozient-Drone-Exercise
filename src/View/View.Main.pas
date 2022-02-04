@@ -7,7 +7,12 @@ uses
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Memo.Types,
   FMX.StdCtrls, FMX.Edit, FMX.ScrollBox, FMX.Memo, FMX.Objects, FMX.Layouts,
   FMX.Controls.Presentation,
-  System.Generics.Collections
+  System.Generics.Collections, FireDAC.Stan.Intf, FireDAC.Stan.Option,
+  FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
+  FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys, FireDAC.Phys.SQLite,
+  FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs,
+  FireDAC.Phys.SQLiteWrapper.Stat, FireDAC.FMXUI.Wait, Data.DB,
+  FireDAC.Comp.Client
   ;
 
 type
@@ -183,42 +188,25 @@ begin
     end;
     Inc(lTrip);
   end;
-//  I := 0;
-//  lLastDrone := '';
-//  lLastTrip := -1;
-//  while I <= lDeliveries.Count -1 do
-//  begin
-//    lNameDrone := lDeliveries[I].Drone.NameDrone;
-//    lTrip := lDeliveries[I].Trip;
-//    if lLastDrone <> lNameDrone then
-//    begin
-//      if lLastTrip <> lTrip then
-//      begin
-//        mmDelivery.Lines.Add(lDeliveries[I].Drone.NameDrone + Chr(13) +
-//          'Trip #' + IntToStr(lDeliveries[I].Trip));
-//        lLastDrone := lDeliveries[I].Drone.NameDrone;
-//        lLastTrip := lTrip
-//      end
-//      else
-//        mmDelivery.Lines.Add(lDeliveries[I].Location.NameLocation);
-//    end
-//    else
-//    begin
-//      lTrip := lDeliveries[I].Trip;
-//      if lLastTrip <> lTrip then
-//      begin
-//        mmDelivery.Lines.Add(lDeliveries[I].Drone.NameDrone + Chr(13) +
-//          'Trip #' + IntToStr(lDeliveries[I].Trip));
-//        lLastDrone := lDeliveries[I].Drone.NameDrone;
-//        lLastTrip := lTrip
-//      end
-//      else
-//        mmDelivery.Lines.Add(lDeliveries[I].Location.NameLocation);
-//      mmDelivery.Lines.Add('Trip #' + IntToStr(lDeliveries[I].Trip) + Chr(13) +
-//        lDeliveries[I].Location.NameLocation);
-//    end;
-//    I := I + 1;
-//  end;
+
+  lDeliveries.Sort(
+  TComparer<TDelivery>.Construct(
+      function(const Left, Right: TDelivery): Integer
+      begin
+        if Left.Drone.NameDrone = Right.Drone.NameDrone then
+        begin
+          if Left.Trip = Right.Trip then
+          begin
+            Result := CompareText(Left.Location.NameLocation, Right.Location.NameLocation);
+          end
+          else
+            Result := CompareValue(Left.Trip, Right.Trip);
+        end
+        else
+          Result := CompareText(Left.Drone.NameDrone, Right.Drone.NameDrone);
+      end
+    )
+  );
   for I := 0 to lDeliveries.Count - 1 do
     mmDelivery.Lines.Add(lDeliveries[I].Drone.NameDrone + Chr(13) +
       'Trip #' + IntToStr(lDeliveries[I].Trip) + Chr(13) +
