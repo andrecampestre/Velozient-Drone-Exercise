@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Memo.Types,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Memo.Types,
   FMX.StdCtrls, FMX.Edit, FMX.ScrollBox, FMX.Memo, FMX.Objects, FMX.Layouts,
   FMX.Controls.Presentation,
   System.Generics.Collections
@@ -87,7 +87,7 @@ implementation
 
 uses
   Math,
-  System.Generics.Defaults
+  System.Generics.Defaults, FMX.Dialogs
   ;
 
 {$R *.fmx}
@@ -104,7 +104,7 @@ begin
   begin
     Randomize;
     lWeight := RandomRange(1, 200);
-    lLine := '[Drone #' + I.ToString + ' ' + BuildRandomValues(FColors, FCars) + ' ' + lWeight.ToString + ' lbs]';
+    lLine := '[Drone #' + I.ToString + ' ' + BuildRandomValues(FColors, FCars) + ' | ' + lWeight.ToString + ' lbs]';
     mmDrone.Lines.Add(lLine);
     lDrone.IdDrone := I;
     lDrone.NameDrone := lLine;
@@ -119,13 +119,15 @@ var
   lLine: string;
   lLocation: TLocation;
 begin
+  if Assigned(FLocations) then
+    FLocations.DisposeOf;
   FLocations := TList<TLocation>.Create;
   mmLocation.Lines.Clear;
   for I := 1 to StrToInt(edtLocations.Text) do
   begin
     Randomize;
-    lWeight := RandomRange(1, 50);
-    lLine := '[Location #' + I.ToString + ' ' + BuildRandomValues(FNames, FSurNames) + ' ' + lWeight.ToString + ' lbs]';
+    lWeight := RandomRange(1, 20);
+    lLine := '[Location #' + I.ToString + ' ' + BuildRandomValues(FNames, FSurNames) + ' | ' + lWeight.ToString + ' lbs]';
     mmLocation.Lines.Add(lLine);
     lLocation.IdLocation := I;
     lLocation.NameLocation := lLine;
@@ -144,7 +146,11 @@ var
   lLine, lNameDrone, lLastDrone: string;
   I, J, lLoadedItems, lMaxWeight, lTrip, lLastTrip, lTotalLocations: Integer;
 begin
+  if (mmDrone.Lines.Count = 0) or (mmLocation.Lines.Count = 0) then
+    raise Exception.Create('The drones and Locations list must not be empty.');
   lDrones := OrderDroneByWeight(FDrones);
+  if FLocations.Count = 0 then
+    bt_AddLocationClick(nil);
   lLocations := OrderLocationByWeight(FLocations);
   lDeliveries := TList<TDelivery>.Create;
   I := 0;
@@ -199,6 +205,8 @@ begin
       end
     )
   );
+
+  mmDelivery.Lines.Clear;
   lLastDrone := '';
   lLastTrip := -1;
   for I := 0 to lDeliveries.Count - 1 do
@@ -240,7 +248,7 @@ begin
     Result := lList[lRandomNumber];
     lList.Clear;
     ExtractStrings([';'],[' '],PChar(AValue2), lList);
-    Result := Result + ' ' + lList[lRandomNumber2];
+    Result := Result + ', ' + lList[lRandomNumber2];
   finally
     FreeAndNil(lList);
   end;
